@@ -3,31 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>パラレル対話盤 v4 — 時系列アクセス</title>
+  <title>パラレル対話盤 v5 — 三点三語接続</title>
   <style>
     :root{
-      --bg:#090b18; --bg2:#11102a; --panel:#151431; --panel2:#0f1228;
-      --line:#34305a; --text:#eeeaf8; --muted:#aaa3d1; --dim:#777096;
-      --gold:#e8c97d; --blue:#9fb6e8; --cyan:#7de8e0; --pink:#e87dd0; --violet:#8e7de8;
-      --danger:#ffb4b4;
+      --bg:#090b18; --bg2:#11102a; --panel:#151431; --line:#34305a;
+      --text:#eeeaf8; --muted:#aaa3d1; --dim:#777096;
+      --gold:#e8c97d; --blue:#9fb6e8; --cyan:#7de8e0; --violet:#8e7de8;
     }
     *{box-sizing:border-box}
     body{
       margin:0; min-height:100vh;
       background:
-        radial-gradient(circle at 20% 10%, rgba(142,125,232,.18), transparent 30%),
-        radial-gradient(circle at 90% 20%, rgba(125,232,224,.10), transparent 28%),
+        radial-gradient(circle at 18% 10%, rgba(142,125,232,.18), transparent 30%),
+        radial-gradient(circle at 88% 18%, rgba(125,232,224,.10), transparent 28%),
         linear-gradient(170deg,var(--bg),var(--bg2) 62%,var(--bg));
       color:var(--text);
-      font-family: "Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+      font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
       padding:22px 16px 40px;
     }
-    .wrap{max-width:1100px;margin:0 auto}
+    .wrap{max-width:1120px;margin:0 auto}
     header{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;margin-bottom:22px}
     h1{margin:0;font-family:serif;letter-spacing:.16em;font-size:25px}
     .subtitle{color:var(--muted);font-size:12px;letter-spacing:.28em;margin-top:5px}
     .grid{display:grid;grid-template-columns:minmax(310px,430px) 1fr;gap:24px;align-items:start}
-    @media(max-width:860px){.grid{grid-template-columns:1fr} header{display:block}}
+    @media(max-width:900px){.grid{grid-template-columns:1fr} header{display:block}}
     .card{
       border:1px solid var(--line);
       border-radius:16px;
@@ -39,14 +38,27 @@
     .panel{padding:18px}
     .lead{line-height:2;color:#cfc9eb;font-family:serif;font-size:14px}
     label{display:block;color:var(--muted);font-size:12px;letter-spacing:.14em;margin:16px 0 8px}
-    textarea{
+    textarea,.kwInput{
       width:100%;border-radius:12px;border:1px solid var(--line);background:#111029;color:var(--text);
-      padding:13px 14px;font-size:15px;line-height:1.7;resize:vertical;min-height:92px;
+      padding:12px 13px;font-size:15px;line-height:1.65;resize:vertical;
     }
+    textarea{min-height:88px}
+    .kwGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    @media(max-width:540px){.kwGrid{grid-template-columns:1fr}}
+    .pointInput{
+      margin-top:14px;
+      border:1px solid #29264e;
+      background:rgba(255,255,255,.035);
+      border-radius:14px;
+      padding:13px;
+    }
+    .pointTitle{font-family:serif;letter-spacing:.10em;font-size:15px;margin-bottom:4px}
+    .pointDesc{font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:10px}
+    .hint{font-size:11.5px;color:#c9c3e8;line-height:1.75;margin:8px 0 0}
     button{
       border:1px solid var(--gold);background:linear-gradient(135deg,rgba(232,201,125,.16),rgba(232,201,125,.05));
       color:var(--gold);border-radius:12px;padding:13px 16px;font-size:14px;letter-spacing:.18em;
-      cursor:pointer;font-family:serif;transition:.2s;width:100%;margin-top:12px;
+      cursor:pointer;font-family:serif;transition:.2s;width:100%;margin-top:14px;
     }
     button:hover{transform:translateY(-1px);background:rgba(232,201,125,.13)}
     button:disabled{opacity:.42;cursor:default;transform:none}
@@ -55,7 +67,7 @@
     svg{width:100%;display:block}
     .node-title{font-family:serif;letter-spacing:.08em}
     .status{margin-top:12px;text-align:center;color:var(--gold);font-family:serif;font-size:24px;letter-spacing:.09em}
-    .stream{min-height:48px;word-break:break-all;color:#c9c3e8;font-family:serif;line-height:1.75;letter-spacing:.12em;font-size:14px;text-align:center;margin-top:8px}
+    .stream{min-height:56px;word-break:break-all;color:#c9c3e8;font-family:serif;line-height:1.75;letter-spacing:.12em;font-size:14px;text-align:center;margin-top:8px}
     .timeline{display:grid;gap:10px;margin-top:14px}
     .point{border:1px solid #29264e;background:rgba(255,255,255,.035);border-radius:12px;padding:12px}
     .point-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
@@ -63,17 +75,18 @@
     .point-count{font-size:11px;color:var(--dim)}
     .keywords{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
     .kw{font-family:serif;border:1px solid currentColor;border-radius:999px;padding:3px 10px;font-size:13px;background:rgba(255,255,255,.035)}
-    .letters{font-family:serif;font-size:12px;line-height:1.7;letter-spacing:.11em;color:#aaa4d1;word-break:break-all;max-height:82px;overflow:auto;padding:8px;background:#0f0e24;border-radius:8px;border:1px solid #252244}
+    .letters{font-family:serif;font-size:12px;line-height:1.7;letter-spacing:.11em;color:#aaa4d1;word-break:break-all;max-height:120px;overflow:auto;padding:8px;background:#0f0e24;border-radius:8px;border:1px solid #252244}
     .hidden{display:none}
     .promptArea{
-      width:100%;height:360px;background:#0f0e24;border:1px solid #2a2650;border-radius:12px;color:#c7c1e5;
+      width:100%;height:380px;background:#0f0e24;border:1px solid #2a2650;border-radius:12px;color:#c7c1e5;
       padding:12px 14px;font-size:12px;line-height:1.75;resize:vertical;
     }
     .promptTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
     .promptTitle{font-family:serif;letter-spacing:.12em;color:var(--gold)}
     .mini{width:auto;margin:0;padding:8px 12px;font-size:12px;letter-spacing:.05em}
     .copied{background:var(--gold)!important;color:#111029!important}
-    .warning{border-color:rgba(232,201,125,.35);background:rgba(232,201,125,.07);color:#d8d0ad;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.8;margin:12px 0}
+    .warning{border:1px solid rgba(232,201,125,.35);background:rgba(232,201,125,.07);color:#d8d0ad;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.8;margin:12px 0}
+    .error{color:#ffb4b4;font-size:12px;line-height:1.7;margin-top:10px;display:none}
   </style>
 </head>
 <body>
@@ -81,7 +94,7 @@
   <header>
     <div>
       <h1>パラレル対話盤</h1>
-      <div class="subtitle">時系列アクセス ・ 三点三語 ・ 文字履歴</div>
+      <div class="subtitle">三点三語接続 ・ 333文字生成 ・ 時系列読解</div>
     </div>
   </header>
 
@@ -93,54 +106,81 @@
             <stop offset="0%" stop-color="#19163a"/>
             <stop offset="100%" stop-color="#080a18"/>
           </radialGradient>
-          <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
         <rect width="420" height="420" rx="18" fill="url(#bg)"/>
         <circle cx="210" cy="210" r="136" fill="none" stroke="#34305a"/>
         <line x1="210" y1="210" x2="210" y2="64" stroke="#9fb6e8" stroke-width="1.6"/>
         <line x1="210" y1="210" x2="84" y2="283" stroke="#7de8e0" stroke-width="1.6"/>
         <line x1="210" y1="210" x2="336" y2="283" stroke="#e8c97d" stroke-width="1.6"/>
+
         <circle cx="210" cy="210" r="34" fill="#1f1a43" stroke="#f0ebdd" stroke-width="1.5"/>
         <text x="210" y="207" fill="#f0ebdd" text-anchor="middle" font-size="14" class="node-title">現在</text>
         <text x="210" y="223" fill="#aaa3d1" text-anchor="middle" font-size="9">問い</text>
 
-        <g id="pastNode">
-          <circle cx="210" cy="64" r="31" fill="#13102a" stroke="#9fb6e8" stroke-width="1.8"/>
-          <text x="210" y="61" fill="#9fb6e8" text-anchor="middle" font-size="13" class="node-title">過去</text>
-          <text x="210" y="77" fill="#aaa3d1" text-anchor="middle" font-size="8">原点</text>
-        </g>
-        <g id="parallelNode">
-          <circle cx="84" cy="283" r="31" fill="#13102a" stroke="#7de8e0" stroke-width="1.8"/>
-          <text x="84" y="280" fill="#7de8e0" text-anchor="middle" font-size="13" class="node-title">並行</text>
-          <text x="84" y="296" fill="#aaa3d1" text-anchor="middle" font-size="8">別の道</text>
-        </g>
-        <g id="futureNode">
-          <circle cx="336" cy="283" r="31" fill="#13102a" stroke="#e8c97d" stroke-width="1.8"/>
-          <text x="336" y="280" fill="#e8c97d" text-anchor="middle" font-size="13" class="node-title">未来</text>
-          <text x="336" y="296" fill="#aaa3d1" text-anchor="middle" font-size="8">先の自分</text>
-        </g>
+        <circle cx="210" cy="64" r="31" fill="#13102a" stroke="#9fb6e8" stroke-width="1.8"/>
+        <text x="210" y="61" fill="#9fb6e8" text-anchor="middle" font-size="13" class="node-title">過去</text>
+        <text x="210" y="77" fill="#aaa3d1" text-anchor="middle" font-size="8">原点</text>
+
+        <circle cx="84" cy="283" r="31" fill="#13102a" stroke="#7de8e0" stroke-width="1.8"/>
+        <text x="84" y="280" fill="#7de8e0" text-anchor="middle" font-size="13" class="node-title">並行</text>
+        <text x="84" y="296" fill="#aaa3d1" text-anchor="middle" font-size="8">別の道</text>
+
+        <circle cx="336" cy="283" r="31" fill="#13102a" stroke="#e8c97d" stroke-width="1.8"/>
+        <text x="336" y="280" fill="#e8c97d" text-anchor="middle" font-size="13" class="node-title">未来</text>
+        <text x="336" y="296" fill="#aaa3d1" text-anchor="middle" font-size="8">先の自分</text>
       </svg>
 
       <div id="status" class="status">000 / 333</div>
       <div id="stream" class="stream"></div>
-
       <div id="results" class="timeline hidden"></div>
     </section>
 
     <section class="card panel">
       <div id="inputPanel">
         <p class="lead">
-          まず、現在の自分の問いをひとつ決める。<br>
-          次に、周囲にいる「過去」「並行現実」「未来」の自分が、それぞれ何を言っているかを観測する。<br>
-          各点は三つのキーワードを持ち、そのキーワードを種にして文字列を生成する。
+          現在の自分の問いを決める。<br>
+          そのうえで、過去・未来・平行世界それぞれに、自由に三つのキーワードを打ち込む。<br>
+          その三点三語を種として333文字を生成し、読み解きの履歴にする。
         </p>
 
         <label for="question">現在の自分の問い</label>
         <textarea id="question" placeholder="例: これからの方向性として、何を選び、何を捨てるべきか"></textarea>
 
-        <button id="startBtn">時系列に接続する</button>
+        <div class="pointInput" style="border-color:rgba(159,182,232,.35)">
+          <div class="pointTitle" style="color:var(--blue)">過去の自分</div>
+          <div class="pointDesc">原点、未処理の痛み、昔から欲しかったもの。三つのキーワードを入力。</div>
+          <div class="kwGrid">
+            <input class="kwInput" id="past1" placeholder="キーワード1">
+            <input class="kwInput" id="past2" placeholder="キーワード2">
+            <input class="kwInput" id="past3" placeholder="キーワード3">
+          </div>
+        </div>
+
+        <div class="pointInput" style="border-color:rgba(232,201,125,.35)">
+          <div class="pointTitle" style="color:var(--gold)">未来の自分</div>
+          <div class="pointDesc">この先の生活、結果の気配、残るもの。三つのキーワードを入力。</div>
+          <div class="kwGrid">
+            <input class="kwInput" id="future1" placeholder="キーワード1">
+            <input class="kwInput" id="future2" placeholder="キーワード2">
+            <input class="kwInput" id="future3" placeholder="キーワード3">
+          </div>
+        </div>
+
+        <div class="pointInput" style="border-color:rgba(125,232,224,.35)">
+          <div class="pointTitle" style="color:var(--cyan)">平行世界の自分</div>
+          <div class="pointDesc">選ばなかった道、別の人生、そこにある代償。三つのキーワードを入力。</div>
+          <div class="kwGrid">
+            <input class="kwInput" id="parallel1" placeholder="キーワード1">
+            <input class="kwInput" id="parallel2" placeholder="キーワード2">
+            <input class="kwInput" id="parallel3" placeholder="キーワード3">
+          </div>
+        </div>
+
+        <p class="hint">指示: 各枠に必ず3つのキーワードを打ち込んでから接続してください。</p>
+        <div id="error" class="error">問いと、各点3つずつのキーワードをすべて入力してください。</div>
+        <button id="startBtn">接続し、333文字を生成する</button>
         <p class="note">
-          これは自己対話のための象徴的な装置です。生成された文字列と三語は、AIに貼り付けるための「観測履歴」として使います。
+          これは自己対話のための象徴的な装置です。生成された文字列と三点三語は、AIに貼り付けるための観測履歴として使います。
         </p>
       </div>
 
@@ -150,7 +190,7 @@
           <button id="copyBtn" class="mini">コピー</button>
         </div>
         <div class="warning">
-          生成された三点三語と文字履歴を、AIに貼り付けてください。AIはこの履歴を「現在の脳を通して各時系列へ触れた痕跡」として読み解きます。
+          生成された三点三語と333文字の履歴を、AIに貼り付けてください。読み解きのルールは既存の深層読解ルールを維持しています。
         </div>
         <textarea id="prompt" class="promptArea" readonly></textarea>
         <button id="resetBtn" class="subbtn">新しい問いでやり直す</button>
@@ -165,18 +205,9 @@ const TOTAL = 333;
 const POINT_TOTAL = 111;
 
 const POINTS = [
-  {
-    id:"past", name:"過去の自分", sub:"原点・忘れていた動機", color:"#9fb6e8",
-    seeds:["原点","未完","最初","痛み","約束","家","名前","憧れ","怖れ","置き去り","素朴","恥","好き","傷","声","はじめ"]
-  },
-  {
-    id:"parallel", name:"並行現実の自分", sub:"選ばなかった道・別の人生", color:"#7de8e0",
-    seeds:["別道","代償","未選択","反転","欲望","賭け","撤退","自由","喪失","裏側","分岐","影","勇気","逃避","孤独","もう一人"]
-  },
-  {
-    id:"future", name:"未来の自分", sub:"この先の生活・結果の気配", color:"#e8c97d",
-    seeds:["結果","生活","老い","継続","修正","後悔","収穫","疲れ","静けさ","期限","責任","習慣","残るもの","捨てるもの","現実","次の朝"]
-  }
+  { id:"past", name:"過去の自分", sub:"原点・未処理の痛み", color:"#9fb6e8", inputs:["past1","past2","past3"] },
+  { id:"future", name:"未来の自分", sub:"この先の生活・結果の気配", color:"#e8c97d", inputs:["future1","future2","future3"] },
+  { id:"parallel", name:"平行世界の自分", sub:"選ばなかった道・別の人生", color:"#7de8e0", inputs:["parallel1","parallel2","parallel3"] }
 ];
 
 const questionEl = document.getElementById("question");
@@ -189,6 +220,7 @@ const resultsEl = document.getElementById("results");
 const promptEl = document.getElementById("prompt");
 const inputPanel = document.getElementById("inputPanel");
 const promptPanel = document.getElementById("promptPanel");
+const errorEl = document.getElementById("error");
 
 let timer = null;
 let seq = [];
@@ -196,7 +228,10 @@ let pointData = [];
 
 function hashStr(str){
   let h = 2166136261;
-  for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h += (h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24); }
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h += (h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);
+  }
   return h >>> 0;
 }
 function rng(seed){
@@ -209,38 +244,38 @@ function rng(seed){
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-function pickKeywords(point, question, letters){
-  const baseSeed = hashStr(question + point.id + letters.join(""));
-  const r = rng(baseSeed);
-  const pool = [...point.seeds];
-  const q = question;
-  if(/仕事|職|会社|独立|収入|稼|事業|商売/.test(q)) pool.push("仕事","収入","役割","信用","看板","独立");
-  if(/家族|親|子|夫|妻|恋|愛|人間関係/.test(q)) pool.push("関係","距離","絆","依存","境界","孤独");
-  if(/創作|作品|表現|note|動画|書|アプリ|AI/.test(q)) pool.push("表現","作品","公開","未完成","熱","受け手");
-  if(/怖|不安|迷|悩|リスク|失敗/.test(q)) pool.push("恐れ","保留","失敗","安全","賭け","傷");
-  if(/方向|道|進|選|決/.test(q)) pool.push("道","選択","分岐","軸","入口","帰路");
-
-  const scored = pool.map((w, i) => {
-    const kanaInfluence = letters.filter(k => w.includes(k)).length;
-    return {w, score: r() + kanaInfluence * .18 + (pool.length-i)*.002};
-  }).sort((a,b)=>b.score-a.score);
-
-  const out = [];
-  for(const x of scored){
-    if(!out.includes(x.w)) out.push(x.w);
-    if(out.length >= 3) break;
-  }
-  return out;
+function normalizeKeywords(arr){
+  return arr.map(x => x.trim()).filter(Boolean);
+}
+function getFormData(){
+  const question = questionEl.value.trim();
+  const points = POINTS.map(p => {
+    const keywords = normalizeKeywords(p.inputs.map(id => document.getElementById(id).value));
+    return {...p, keywords};
+  });
+  return {question, points};
+}
+function validate(){
+  const {question, points} = getFormData();
+  return question && points.every(p => p.keywords.length === 3);
 }
 function weightedKana(r, kws){
   const joined = kws.join("");
-  const candidates = KANA.map(k => ({k, w: 1 + (joined.includes(k) ? 5 : 0)}));
+  const candidates = KANA.map(k => {
+    let w = 1;
+    if(joined.includes(k)) w += 7;
+    for(const kw of kws){
+      if(kw[0] === k) w += 3;
+      if(kw[kw.length-1] === k) w += 2;
+    }
+    return {k,w};
+  });
   const sum = candidates.reduce((a,c)=>a+c.w,0);
   let x = r() * sum;
   for(const c of candidates){ x -= c.w; if(x <= 0) return c.k; }
   return KANA[Math.floor(r()*KANA.length)];
 }
-function makePrompt(question, data){
+function makePrompt(question, data, fullSeq){
   const blocks = data.map(d => {
     return `◆${d.name}（${d.sub}）
 三語: ${d.keywords.join(" / ")}
@@ -248,24 +283,27 @@ function makePrompt(question, data){
 ${d.letters.join("")}`;
   }).join("\n\n");
 
-  return `【パラレル対話盤 v4 — 時系列アクセス・三点三語】
+  return `【パラレル対話盤 v5 — 三点三語接続・333文字読解】
 
 ■ 最重要・遮断条項
 この対話では、AIがユーザーについて記憶している情報、過去会話、メモリ、人物像の推測を使用しないこと。
-判断材料は、この文書に書かれた「現在の問い」と「三点三語と文字履歴」のみとする。
+判断材料は、この文書に書かれた「現在の問い」「三点三語」「333文字の生成履歴」のみとする。
 
 ■ これは何か
 これは占いではなく、構造化された自己対話の儀式である。
-現在の自分が問いを定め、その周囲にいる「過去の自分」「並行現実の自分」「未来の自分」が何を言っているかを、三語と文字列の履歴から読み解く。
+現在の自分が問いを定め、その周囲にいる「過去の自分」「未来の自分」「平行世界の自分」が何を言っているかを、相談者自身が入力した三語と、そこから生成された333文字の履歴から読み解く。
 
-ここでの文字列は、相談者の脳を通して各時系列に触れた痕跡として扱う。
+ここでの333文字は、相談者の脳を通して各時系列に触れた痕跡として扱う。
 ただし未来を断定せず、現実の選択に戻すこと。
 
 ■ 現在の自分の問い
 ${question}
 
-■ 観測履歴
+■ 三点三語と文字履歴
 ${blocks}
+
+■ 333文字 全体履歴
+${fullSeq.join("")}
 
 ■ 読み解きのルール
 1. 日本語で答える。
@@ -281,22 +319,22 @@ ${blocks}
 
 ■ 出力形式
 
-【パラレル対話盤 — 時系列読解】
+【パラレル対話盤 — 三点三語読解】
 
 ■ 問い
 現在の問いを一文で再掲する。
 
 ■ 三点の配置
-過去・並行現実・未来の三語を並べ、それぞれが何を示しているか一文ずつ読む。
+過去・未来・平行世界の三語を並べ、それぞれが何を示しているか一文ずつ読む。
 
 ◆過去の自分
 5〜8文。原点、未処理の痛み、昔から欲しかったものを語る。
 
-◆並行現実の自分
-5〜8文。選ばなかった道の得たものと代償を語る。過去または未来の声へ一度反論する。
-
 ◆未来の自分
 5〜8文。このまま進んだ場合と、極端に変えた場合の両方を生活感で描く。
+
+◆平行世界の自分
+5〜8文。選ばなかった道の得たものと代償を語る。過去または未来の声へ一度反論する。
 
 ◇現在の自分・議長
 300〜500字。
@@ -317,19 +355,29 @@ function renderResults(){
         <div class="point-count">${d.letters.length}音</div>
       </div>
       <div style="font-size:11px;color:var(--dim)">${d.sub}</div>
-      <div class="keywords">${d.keywords.map(k=>`<span class="kw" style="color:${d.color}">${k}</span>`).join("")}</div>
+      <div class="keywords">${d.keywords.map(k=>`<span class="kw" style="color:${d.color}">${escapeHtml(k)}</span>`).join("")}</div>
       <div class="letters">${d.letters.join("")}</div>
     `;
     resultsEl.appendChild(div);
   }
   resultsEl.classList.remove("hidden");
 }
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
 
 function start(){
-  const question = questionEl.value.trim();
-  if(!question) return;
+  if(!validate()){
+    errorEl.style.display = "block";
+    return;
+  }
+  errorEl.style.display = "none";
+
+  const form = getFormData();
+  const question = form.question;
+  pointData = form.points.map(p => ({...p, letters:[]}));
   seq = [];
-  pointData = POINTS.map(p => ({...p, letters:[], keywords:[]}));
+
   let n = 0;
   statusEl.textContent = "000 / 333";
   streamEl.textContent = "";
@@ -337,7 +385,7 @@ function start(){
   promptPanel.classList.add("hidden");
   startBtn.disabled = true;
 
-  const seed = hashStr(question + Date.now());
+  const seed = hashStr(question + JSON.stringify(pointData.map(p=>p.keywords)) + Date.now());
   const r = rng(seed);
 
   timer = setInterval(() => {
@@ -345,28 +393,24 @@ function start(){
     for(let i=0;i<batch;i++){
       const pointIndex = Math.floor(n / POINT_TOTAL);
       const p = pointData[Math.min(pointIndex, 2)];
-      const tempKws = p.keywords.length ? p.keywords : p.seeds.slice(0,3);
-      const k = weightedKana(r, tempKws);
+      const k = weightedKana(r, p.keywords);
       p.letters.push(k);
       seq.push(k);
       n++;
-      if(p.letters.length === 45) p.keywords = pickKeywords(p, question, p.letters);
     }
-    streamEl.textContent = seq.slice(-72).join("");
+
+    streamEl.textContent = seq.slice(-84).join("");
     statusEl.textContent = String(n).padStart(3,"0") + " / 333";
 
     if(n >= TOTAL){
       clearInterval(timer);
-      for(const p of pointData){
-        if(!p.keywords.length) p.keywords = pickKeywords(p, question, p.letters);
-      }
       renderResults();
-      promptEl.value = makePrompt(question, pointData);
+      promptEl.value = makePrompt(question, pointData, seq);
       inputPanel.classList.add("hidden");
       promptPanel.classList.remove("hidden");
       startBtn.disabled = false;
     }
-  }, 24);
+  }, 22);
 }
 
 startBtn.addEventListener("click", start);
@@ -385,7 +429,9 @@ copyBtn.addEventListener("click", async () => {
     copyBtn.classList.add("copied");
     setTimeout(()=>{copyBtn.textContent="コピー";copyBtn.classList.remove("copied")},1800);
   }catch(e){
-    promptEl.focus(); promptEl.select(); document.execCommand("copy");
+    promptEl.focus();
+    promptEl.select();
+    document.execCommand("copy");
   }
 });
 </script>
